@@ -109,6 +109,11 @@ Function Get-GRBL-G83
 
     [float]$currentZ = ([float]$thisR - $step)
     
+    if($currentZ -lt [float]$thisZ)
+    {
+        $currentZ = $thisZ
+    }
+
     while($currentZ -ge [float]$thisZ)
     {
         # now drill
@@ -195,6 +200,12 @@ Function Get-GRBL
             $return += Write-Comment -comment $line
             $return += Get-GRBL-G83
         }
+
+        # check for unsupported commands such as G98,G99
+        #elseif($unsupportedGCodes -contains $GLOBAL_THIS_RETRACT)
+        #{
+        #    $return += Write-Comment -comment $line
+        #}
 
         # nothing to do so pass back the line as is
         else

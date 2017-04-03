@@ -166,9 +166,9 @@ Function Write-CommentAllVars
     $return = @()
     $globalVars = Get-Variable | Where-Object { $_.Name -like "GLOBAL*" } -ErrorAction SilentlyContinue
     $localVars = Get-Variable | Where-Object { $_.Name -like "LOCAL*" } -ErrorAction SilentlyContinue
-                    
-    $globalVars | foreach { $return += (Write-Comment -comment ($_.Name + " = " + $_.Value)) }
-    $localVars | foreach { $return += (Write-Comment -comment  ($_.Name + " = " + $_.Value)) }
+
+    $globalVars | foreach { $return += (Write-Comment -comment (("{0} : {1} = {2}" -f $MyInvocation.MyCommand,$_.Name,$_.Value))) }
+    $localVars | foreach { $return += (Write-Comment -comment (("{0} : {1} = {2}" -f $MyInvocation.MyCommand,$_.Name,$_.Value))) }
 
     return $return
 }
@@ -187,6 +187,7 @@ Function GRBL-MoveXY
         [switch]$Rapid
 	)
 
+    $return = @()
     $_G = ""
     $_X = ""
     $_Y = ""
@@ -200,8 +201,9 @@ Function GRBL-MoveXY
     if($Y){$_Y = "Y$Y "}
     else{$_Y = ""}
 
-    return "$_G$_X$_Y"
-	
+    $return += (Write-Comment -comment  ("{0} : MOVE {1} {2}" -f $MyInvocation.MyCommand,$_X,$_Y))
+    $return += "$_G$_X$_Y"
+	return $return
 }
 
 Function GRBL-MoveZ
@@ -213,9 +215,11 @@ Function GRBL-MoveZ
         [switch]$Rapid
 	)
 
+    $return = @()
     $_G = ""
     $_Z = ""
     $_F = ""
+
 
     if($Rapid){ $_G = "G0 " }
     else
@@ -227,8 +231,10 @@ Function GRBL-MoveZ
     if($Z){$_Z = "Z$Z "}
     else{$_Z = ""}
 
-    return "$_G$_Z$_F"
-	
+    $return += (Write-Comment -comment  ("{0} : MOVE {1} {2}" -f $MyInvocation.MyCommand,$_Z,$_F))
+    $return += "$_G$_Z$_F"
+	return $return
+
 }
 
 Function GRBL-Preliminary
@@ -242,10 +248,10 @@ Function GRBL-Preliminary
     
     $return = @()
     # rapid move to R
-    $return += (Write-Comment -comment  ("RAPID MOVE TO R" + $R))
+    $return += (Write-Comment -comment  ("{0} : RAPID MOVE TO R{1}" -f $MyInvocation.MyCommand, $R))
     $return += GRBL-MoveZ -Z $R -Rapid
     # move to x and y
-    $return += (Write-Comment -comment  ("RAPID MOVE TO 'X,Y' " + $X + "," + $Y))
+    $return += (Write-Comment -comment  ("{0} : RAPID MOVE TO 'X,Y' {1},{2}" -f $MyInvocation.MyCommand,$X,$Y))
     $return += GRBL-MoveXY -X $X -Y $Y -Rapid
     return $return
 }
@@ -258,7 +264,7 @@ Function GRBL-Drill
 		[string]$F = ''
 	)
     $return = @()
-    $return += (Write-Comment -comment  ("DRILL TO Z$Z at FEEDRATE F" + $F))
+    $return += (Write-Comment -comment  ("{0} : DRILL TO Z{1}$Z at FEEDRATE F{2}" -f $MyInvocation.MyCommand,$Z,$F))
     $return += GRBL-MoveZ -Z $Z -F $F
 	return $return
 }
@@ -270,12 +276,24 @@ Function GRBL-Retract
 		[float]$Z = ''	)
 
     $return = @()
-    $return += (Write-Comment -comment  ("Rapid RETRACT TO Z$Z"))
+    $return += (Write-Comment -comment  ("{0} : Rapid RETRACT TO Z$Z" -f $MyInvocation.MyCommand))
     $return += GRBL-MoveZ -Z $Z -Rapid
 	return $return
 }
 
+Function GRBL-Dwell
+{
+	[cmdletbinding()]	
+	Param (		
+		[string]$P = ''
+	)
 
+    $return = @()
+    $return += (Write-Comment -comment  ("{0} : DWELL $P Seconds" -f $MyInvocation.MyCommand))
+    $return += "G4 $P"
+	return $return
+
+}
 
 
 # Variable helper functions
@@ -518,10 +536,13 @@ Function Clear-Vars
 	
     Process  
     {	
-        $Vars | Clear-Variable
-        if($Remove)
+        foreach($v in $Vars)
         {
-            $Vars | Remove-Variable
+            $v | Clear-Variable
+            if($Remove)
+            {
+                $v | Remove-Variable
+            }
         }
     }
     

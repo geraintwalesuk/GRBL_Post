@@ -139,6 +139,9 @@ Set-Variable -Name cannedCycleGCodes -Value @("G73","G74","G76","G81","G82","G83
 # retract gcodes
 Set-Variable -Name retractGCodes -Value @("G98","G99") -Scope Global
 
+# Unsupported gcodes - these will be commented out
+Set-Variable -Name unsupportedGCodes -Value @("G98","G99","G73","G74","G76","G81","G82","G83","G84","G85","G86","G87","G88","G89") -Scope Global
+
 ##########################################################################################################
 # END: MODAL CODES WE MAY NEED TO KEEP TRACK OF
 ##########################################################################################################
