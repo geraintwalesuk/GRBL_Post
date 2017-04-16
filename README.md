@@ -4,7 +4,7 @@ GRBL_Post: GRBL post processor to implement Canned Cycles
 Copyright (C) 2017  Geraint Evans
 
 
-## GRBL Post Process script for FreeCad (or any other GCode file)
+GRBL Post Process script for FreeCad (or any other GCode file)
 
 If exporting from FreeCAD then either use no post process or the linuxcnc post process.
 Copy the gcode file to the same location as this script, supply the input filename and the output prefix for the output filename.
